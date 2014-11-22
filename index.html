@@ -46,11 +46,13 @@
 
 class: center, middle
 
-<img src="images/spark-logo.png" width="80%">
+<img src="images/spark-logo.png" width="80%" style="margin-bottom:50px">
 
-Alexis Seigneurin - [@aseigneurin](https://twitter.com/ASeigneurin)
+<img src="images/logo-codeurs-en-seine.png" width="40%" style="float:right;margin-left:40px;margin-top:20px;margin-bottom:20px">
 
-Ippon Technologies - [@ippontech](https://twitter.com/ippontech)
+Alexis Seigneurin<br>[@aseigneurin](https://twitter.com/ASeigneurin)
+
+<img src="images/logo-ippon.png" width="15%"><br>[@ippontech](https://twitter.com/ippontech)
 
 ---
 
@@ -120,10 +122,11 @@ Ippon Technologies - [@ippontech](https://twitter.com/ippontech)
 
 # Intégration
 
-* Yarn, Zookeeper, Mesos
-* HDFS
-* Cassandra
-* Elasticsearch
+- Yarn, Zookeeper, Mesos
+- HDFS
+- Cassandra
+- Elasticsearch
+- MongoDB
 
 ---
 class: center, middle
@@ -280,7 +283,9 @@ sc.textFile(".../wikipedia/pagecounts")
 ---
 class: center, middle
 
-# Démo - Spark Shell
+# Démo
+
+# Spark Shell
 
 ---
 
@@ -339,18 +344,99 @@ class: center, middle
 <img src="images/sparkstreaming2.png" width="100%">
 
 ---
+class: dense
 
 # Spark Streaming
 
 Sources :
 
+- Socket
 - Kafka
 - Flume
 - HDFS
-- ZeroMQ
+- MQ (ZeroMQ...)
 - Twitter
 - ...
 
+---
+class: center, middle
+
+# Démo
+
+# Spark Streaming
+
+---
+
+# Démo de Spark Streaming
+
+- Consommation de Tweets _#Android_
+  - [Twitter4J](http://twitter4j.org/)
+- Détection de la langue du Tweet
+  - [Language Detection](https://code.google.com/p/language-detection/)
+- Indexation dans ElasticSearch
+- Analyse dans Kibana 4
+
+---
+
+# Initialisation Spark Streaming
+
+```java
+SparkConf sparkConf = new SparkConf()
+    .setAppName("tweets worldcup")
+    .setMaster("local[2]")
+    .set("spark.serializer", KryoSerializer.class.getName())
+    .set("es.nodes", "localhost:9200")
+    .set("es.index.auto.create", "true")
+    .set("es.mapping.timestamp", "createdAt");
+
+JavaStreamingContext sc = new JavaStreamingContext(sparkConf,
+    new Duration(5000));
+        ```
+
+---
+
+# Consommation et processing
+
+```java
+String[] filters = { "#Android" };
+TwitterUtils.createStream(sc, twitterAuth, filters)
+    .foreachRDD(rdd -> {
+
+        JavaRDD<String> tweets = rdd
+
+                .map(s -> new Tweet(s.getUser().getName(),
+                        s.getText(),
+                        s.getCreatedAt(),
+                        detectLanguage(s.getText())))
+
+                .map(t -> mapper.writeValueAsString(t));
+
+        JavaEsSpark.saveJsonToEs(tweets, "spark/tweets");
+        return null;
+    });
+```
+
+---
+
+# Démo
+
+- Lancer ElasticSearch
+  - `curl -X DELETE localhost:9200
+- Lancer Kibana
+  - <http://localhost:5601>
+- Lancer le traitement
+
+---
+
+class: center, middle
+
+<img src="images/question-mark.jpg" width="60%">
+
+<img src="images/logo-codeurs-en-seine.png" width="35%" style="float:right">
+
+[@aseigneurin](https://twitter.com/ASeigneurin) - [@ippontech](https://twitter.com/ippontech)
+
+[aseigneurin.github.io](http://aseigneurin.github.io)<br>[blog.ippon.fr](http://blog.ippon.fr)
 
     </textarea>
     <script src="scripts/remark-latest.min.js" type="text/javascript">
