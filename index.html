@@ -108,6 +108,27 @@ Alexis Seigneurin<br>[@aseigneurin](https://twitter.com/ASeigneurin)
 - **Spark : 23 minutes** avec 206 noeuds (6592 cores)
 
 ---
+class: dense
+
+# Hadoop
+
+- Ecriture des résultats intermédiaires sur HDFS
+- Adapté aux traitements batches, pas au temps réel
+
+<img src="images/hadoop.png" width="100%">
+
+---
+class: dense
+
+# Spark
+
+- I/Os agressivement optimisées
+- Une étape peut être un _map_ seul (!_reduce_)
+- Peut manipuler des types simples (!tuples)
+
+<img src="images/spark.png" width="100%">
+
+---
 
 # Ecosystème Spark
 
@@ -138,9 +159,9 @@ class: dense
 
 # Stockage &amp; traitements
 
-HDFS
+Stockage
 
-- Hadoop Distributed File System
+- HDFS, base NoSQL...
 - Stockage distribué
 - Tolérant à la panne
 
@@ -172,9 +193,61 @@ class: dense
 # Manipulation de _tuples_ :
 
 - Clé - Valeur
-- Les tuples sont indépendants les uns des autres
+- Tuples indépendants les uns des autres
 
 ---
+class: dense
+
+# RDD
+
+- Resilient Distributed Dataset
+- Abstraction, collection traitée en parallèle
+- Tolérant à la panne
+
+---
+class: dense
+
+# Sources :
+
+  - Fichier sur HDFS
+  - Fichier local
+  - Collection en mémoire
+  - S3
+  - Base NoSQL
+  - ...
+  - Ou une implémentation custom de `InputFormat`
+
+---
+class: dense
+
+# Transformations
+
+- Manipule un RDD, retourne un autre RDD
+- Lazy !
+
+
+- Exemples :
+ * _map()_ : une valeur &rarr; une valeur
+ * _mapToPair()_ : une valeur &rarr; un tuple
+ * _filter()_ : filtre les valeurs/tuples
+ * _groupByKey()_ : regroupe la valeurs par clés
+ * _reduceByKey()_ : aggrège les valeurs par clés
+ * _join()_, _cogroup()_... : jointure entre deux RDD
+
+---
+class: dense
+
+# Actions finales
+
+- Ne retournent pas un RDD
+- Exemples :
+ * _count()_ : compte les valeurs/tuples
+ * _saveAsHadoopFile()_ : sauve les résultats au format Hadoop
+ * _foreach()_ : exécute une fonction sur chaque valeur/tuple
+ * _collect()_ : récupère les valeurs dans une liste (List&lt; T &gt;)
+
+---
+class: dense
 
 # Word count
 
@@ -194,87 +267,18 @@ class: full
 <img src="images/wordcount.png" width="90%">
 
 ---
-class: dense
-
-# Hadoop
-
-- Ecriture des résultats intermédiaires sur HDFS
-- Adapté aux traitements batches, pas au temps réel
-
-<img src="images/hadoop.png" width="100%">
-
----
-class: dense
-
-# Spark
-
-- I/Os agressivement optimisées
-- Une étape peut être un _map_ seul (!_reduce_)
-- Peut manipuler des types simples (!tuples)
-
-<img src="images/spark.png" width="100%">
-
----
-class: dense
-
-# Spark - RDD
-
-- Resilient Distributed Dataset
-- Abstraction, collection traitée en parallèle
-- Tolérant à la panne
-- Différentes sources :
-  - Fichier sur HDFS
-  - Fichier local
-  - Collection en mémoire
-  - S3
-  - ...
-
----
-class: dense
-
-# Spark - Transformations
-
-- Manipule un RDD, retourne un autre RDD
-- Lazy !
-
-
-- Exemples :
- * _map()_ : une valeur &rarr; une valeur
- * _mapToPair()_ : une valeur &rarr; un tuple
- * _filter()_ : filtre les valeurs/tuples
- * _groupByKey()_ : regroupe la valeurs par clés
- * _reduceByKey()_ : aggrège les valeurs par clés
- * _join()_, _cogroup()_... : jointure entre deux RDD
-
----
-class: dense
-
-# Spark - Actions finales
-
-- Ne retournent pas un RDD
-- Exemples :
- * _count()_ : compte les valeurs/tuples
- * _saveAsHadoopFile()_ : sauve les résultats au format Hadoop
- * _foreach()_ : exécute une fonction sur chaque valeur/tuple
- * _collect()_ : récupère les valeurs dans une liste (List&lt; T &gt;)
-
----
 
 # Spark - Exemple
 
-```text
-...
-fr Ignifuge 1 17634
-fr Ignitron 1 9887
-fr Ignorance 4 56569
-...
-```
-
 ```java
-sc.textFile(".../wikipedia/pagecounts")
-        .map(line -> line.split(" "))
-        .mapToPair(s -> new Tuple2<String, Long>(s[1], Long.parseLong(s[2])))
+sc.textFile("some/text/files/*")
+
+        .flatMap(line -> Arrays.asList(line.split("\\W")))
+
+        .mapToPair(word -> new Tuple2<String, Integer>(word, 1))
+
         .reduceByKey((x, y) -> x + y)
+
         .collect();
 ```
 
@@ -335,20 +339,9 @@ class: center, middle
 <img src="images/sparkstreaming1.png" width="100%">
 
 ---
-
-# DStream
-
-- Discretized Streams
-- Séquence de RDDs
-
-<img src="images/sparkstreaming2.png" width="100%">
-
----
 class: dense
 
-# Spark Streaming
-
-Sources :
+# Sources
 
 - Socket
 - Kafka
@@ -357,6 +350,27 @@ Sources :
 - MQ (ZeroMQ...)
 - Twitter
 - ...
+- Ou une implémentation custom de `Receiver`
+
+---
+
+# DStream
+
+- Discretized Streams
+- Séquence de RDDs
+- Initialisé avec une `Duration`
+
+<img src="images/sparkstreaming2.png" width="100%">
+
+---
+
+# Window operations
+
+- Fenêtre glissante
+- Réutilise des données d'autres fenêtres
+- Initialisé avec _window length_ et _slide interval_
+
+<img src="images/streaming-dstream-window.png" width="100%">
 
 ---
 class: center, middle
@@ -400,17 +414,13 @@ JavaStreamingContext sc = new JavaStreamingContext(sparkConf,
 ```java
 String[] filters = { "#Android" };
 TwitterUtils.createStream(sc, twitterAuth, filters)
-    .foreachRDD(rdd -> {
 
-        JavaRDD<String> tweets = rdd
+    .map(s -> new Tweet(s.getUser().getName(), s.getText(),
+        s.getCreatedAt(), detectLanguage(s.getText())))
 
-                .map(s -> new Tweet(s.getUser().getName(),
-                        s.getText(),
-                        s.getCreatedAt(),
-                        detectLanguage(s.getText())))
+    .map(t -> mapper.writeValueAsString(t))
 
-                .map(t -> mapper.writeValueAsString(t));
-
+    .foreachRDD(tweets -> {
         JavaEsSpark.saveJsonToEs(tweets, "spark/tweets");
         return null;
     });
