@@ -314,6 +314,16 @@ class: center, middle
 
 ---
 
+# Topologie
+
+- Un master / des workers
+  - (+ un master en standby)
+  - Communication bidirectionnelle
+- On soumet une _application_
+
+---
+class: dense
+
 # Spark en Cluster
 
 Plusieurs options
@@ -323,6 +333,39 @@ Plusieurs options
 - Standalone
   - Workers démarrés individuellement
   - Workers démarrés par le master
+
+---
+
+# Colocation données &amp; traitement
+
+<img src="images/spark-cluster.png" width="80%" style="margin-left:10%">
+
+---
+class: center, middle
+
+# Démo
+
+# Spark en Cluster
+
+---
+
+# Démo
+
+```shell
+$ $SPARK_HOME/sbin/start-master.sh
+
+$ $SPARK_HOME/bin/spark-class
+    org.apache.spark.deploy.worker.Worker
+    spark://MBP-de-Alexis:7077
+    --cores 2 --memory 2G
+
+$ mvn clean package
+$ $SPARK_HOME/bin/spark-submit
+    --master spark://MBP-de-Alexis:7077
+    --class com.seigneurin.spark.WikipediaMapReduceByKey
+    --deploy-mode cluster
+    target/pres-spark-0.0.1-SNAPSHOT.jar
+```
 
 ---
 class: center, middle
@@ -427,11 +470,26 @@ TwitterUtils.createStream(sc, twitterAuth, filters)
 ```
 
 ---
+class:dense
 
 # Démo
 
 - Lancer ElasticSearch
-  - `curl -X DELETE localhost:9200
+
+```shell
+$ curl -X DELETE localhost:9200
+$ curl -X PUT localhost:9200/spark/_mapping/tweets '{
+  "tweets": {
+    "properties": {
+      "user": {"type": "string","index": "not_analyzed"},
+      "text": {"type": "string"},
+      "createdAt": {"type": "date","format": "date_time"},
+      "language": {"type": "string","index": "not_analyzed"}
+    }
+  }
+}'
+```
+
 - Lancer Kibana
   - <http://localhost:5601>
 - Lancer le traitement
