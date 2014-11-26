@@ -108,6 +108,7 @@ Alexis Seigneurin<br>[@aseigneurin](https://twitter.com/ASeigneurin)
 - **Spark : 23 minutes** avec 206 noeuds (6592 cores)
 
 ---
+exclude: true
 class: dense
 
 # Hadoop
@@ -118,6 +119,7 @@ class: dense
 <img src="images/hadoop.png" width="100%">
 
 ---
+exclude: true
 class: dense
 
 # Spark
@@ -152,33 +154,10 @@ class: dense
 ---
 class: center, middle
 
-# Fonctionnement
+# Fonctionnement de Spark
 
 ---
-class: dense
-
-# Stockage &amp; traitements
-
-Stockage
-
-- HDFS, base NoSQL...
-- Stockage distribué
-- Tolérant à la panne
-
-MapReduce
-
-- Framework (API)
-- Traitement parallèle
-- Tolérant à la panne
-
----
-
-# Colocation données &amp; traitement
-
-- Traiter la donnée là où elle se trouve
-- Eviter les network I/Os
-
----
+exclude: true
 class: dense
 
 # MapReduce
@@ -189,6 +168,7 @@ class: dense
 <img src="images/mapreduce.png" width="80%">
 
 ---
+exclude: true
 
 # Manipulation de _tuples_ :
 
@@ -203,6 +183,9 @@ class: dense
 - Resilient Distributed Dataset
 - Abstraction, collection traitée en parallèle
 - Tolérant à la panne
+- Manipulation de _tuples_ :
+  - Clé - Valeur
+  - Tuples indépendants les uns des autres
 
 ---
 class: dense
@@ -245,6 +228,11 @@ class: dense
  * _saveAsHadoopFile()_ : sauve les résultats au format Hadoop
  * _foreach()_ : exécute une fonction sur chaque valeur/tuple
  * _collect()_ : récupère les valeurs dans une liste (List&lt; T &gt;)
+
+---
+class: center, middle
+
+# Exemple
 
 ---
 class: dense
@@ -333,6 +321,30 @@ Plusieurs options
 - Standalone
   - Workers démarrés individuellement
   - Workers démarrés par le master
+
+---
+class: dense
+
+# Stockage &amp; traitements
+
+MapReduce
+
+- Spark (API)
+- Traitement parallèle
+- Tolérant à la panne
+
+Stockage
+
+- HDFS, base NoSQL...
+- Stockage distribué
+- Tolérant à la panne
+
+---
+
+# Colocation données &amp; traitement
+
+- Traiter la donnée là où elle se trouve
+- Eviter les network I/Os
 
 ---
 
@@ -434,6 +446,7 @@ class: center, middle
 - Analyse dans Kibana 4
 
 ---
+exclude: true
 
 # Initialisation Spark Streaming
 
@@ -443,14 +456,14 @@ SparkConf sparkConf = new SparkConf()
     .setMaster("local[2]")
     .set("spark.serializer", KryoSerializer.class.getName())
     .set("es.nodes", "localhost:9200")
-    .set("es.index.auto.create", "true")
-    .set("es.mapping.timestamp", "createdAt");
+    .set("es.index.auto.create", "true");
 
 JavaStreamingContext sc = new JavaStreamingContext(sparkConf,
     new Duration(5000));
         ```
 
 ---
+exclude: true
 
 # Consommation et processing
 
